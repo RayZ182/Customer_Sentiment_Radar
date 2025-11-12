@@ -18,27 +18,27 @@ placeholder = st.empty()
 for _ in range(100):
     try:
         df = pd.read_csv(URL)
-        df = df.dropna(subset=['sentiment'])
-        df['churn_risk'] = pd.to_numeric(df['churn_risk'], errors='coerce').fillna(0)
+        df = df.dropna(subset=['Sentiment'])
+        df['Churn_risk'] = pd.to_numeric(df['Churn_risk'], errors='coerce').fillna(0)
 
         with placeholder.container():
             col1, col2, col3 = st.columns(3)
 
             # PIE: Sentiment
-            sentiment_counts = df['sentiment'].value_counts()
+            sentiment_counts = df['Sentiment'].value_counts()
             fig_pie = px.pie(values=sentiment_counts.values, names=sentiment_counts.index,
                              color_discrete_map={'Positive': '#10B981', 'Negative': '#EF4444', 'Neutral': '#F59E0B'},
                              title="Sentiment Breakdown")
             col1.plotly_chart(fig_pie, use_container_width=True)
 
             # BAR: Top Complaints
-            complaints = df[df['sentiment'] == 'Negative']['top_complaint'].value_counts().head(5)
+            complaints = df[df['Sentiment'] == 'Negative']['Top_Complaint'].value_counts().head(5)
             fig_bar = px.bar(x=complaints.values, y=complaints.index, orientation='h',
                              title="Top 5 Complaints", color=complaints.values, color_continuous_scale='Reds')
             col2.plotly_chart(fig_bar, use_container_width=True)
 
             # GAUGE: Avg Churn Risk
-            avg_risk = int(df['churn_risk'].mean())
+            avg_risk = int(df['Churn_risk'].mean())
             fig_gauge = px.bar(x=[avg_risk], y=[""], orientation='h',
                                title=f"Avg Churn Risk: {avg_risk}%",
                                range_x=[0, 100], color=[avg_risk], color_continuous_scale='RdYlGn_r')
@@ -46,7 +46,7 @@ for _ in range(100):
 
             # TABLE
             st.subheader("Latest Reviews")
-            st.dataframe(df[['client_name', 'rating', 'text', 'sentiment', 'churn_risk', 'risk_level']].tail(10),
+            st.dataframe(df[['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level']].tail(10),
                          use_container_width=True)
 
         time.sleep(30)
