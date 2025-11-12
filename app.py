@@ -7,7 +7,7 @@ from datetime import datetime
 # === CONFIG ===
 SHEET_ID = "19KYixXl-ki1QOYuIRqe_DnWEauhrJyhh4BBTtcA-l0g"
 SHEET_NAME = "Dashboard Data"
-URL = "https://docs.google.com/spreadsheets/d/19KYixXl-ki1QOYuIRqe_DnWEauhrJyhh4BBTtcA-l0g/edit?gid=1767595696#gid=1767595696"
+URL = "https://docs.google.com/spreadsheets/d/19KYixXl-ki1QOYuIRqe_DnWEauhrJyhh4BBTtcA-l0g/edit?usp=sharing"
 
 st.set_page_config(page_title="Client Sentiment Radar", layout="wide")
 st.title("Client Sentiment Radar")
