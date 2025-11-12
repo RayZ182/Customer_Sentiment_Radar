@@ -17,7 +17,7 @@ st.caption("Live AI-Powered Churn Insights | Auto-Refresh: 30s")
 placeholder = st.empty()
 for _ in range(100):
     try:
-        df = pd.read_csv(URL)
+        df = pd.read_csv(csv_export_url)
         df = df.dropna(subset=['Sentiment'])
         df['Churn_risk'] = pd.to_numeric(df['Churn_risk'], errors='coerce').fillna(0)
 
