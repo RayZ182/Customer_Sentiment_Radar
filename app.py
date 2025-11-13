@@ -24,8 +24,8 @@ for _ in range(100):
         df = pd.read_csv(CSV_URL)
 
         # Clean & standardize
-        df = df.dropna(subset=['sentiment'])  # lowercase
-        df['churn_risk'] = pd.to_numeric(df['churn_risk'], errors='coerce').fillna(0)
+        df = df.dropna(subset=['Sentiment'])  # lowercase
+        df['Churn_risk'] = pd.to_numeric(df['Churn_risk'], errors='coerce').fillna(0)
 
         with placeholder.container():
             # === AI OVERALL SUMMARY (TOP BANNER) ===
@@ -38,7 +38,7 @@ for _ in range(100):
             col1, col2, col3 = st.columns(3)
 
             # PIE: Sentiment
-            sentiment_counts = df['sentiment'].value_counts()
+            sentiment_counts = df['Sentiment'].value_counts()
             fig_pie = px.pie(
                 values=sentiment_counts.values,
                 names=sentiment_counts.index,
@@ -48,7 +48,7 @@ for _ in range(100):
             col1.plotly_chart(fig_pie, use_container_width=True)
 
             # BAR: Top Complaints
-            complaints = df[df['sentiment'] == 'Negative']['top_complaint'].value_counts().head(5)
+            complaints = df[df['Sentiment'] == 'Negative']['Top_Complaint'].value_counts().head(5)
             if not complaints.empty:
                 fig_bar = px.bar(
                     x=complaints.values, y=complaints.index, orientation='h',
@@ -59,7 +59,7 @@ for _ in range(100):
                 col2.info("No negative feedback yet.")
 
             # GAUGE: Avg Churn Risk
-            avg_risk = int(df['churn_risk'].mean())
+            avg_risk = int(df['Churn_risk'].mean())
             fig_gauge = px.bar(
                 x=[avg_risk], y=[""], orientation='h',
                 title=f"Avg Churn Risk: {avg_risk}%",
@@ -69,7 +69,7 @@ for _ in range(100):
 
             # TABLE: Latest Reviews
             st.subheader("Latest Reviews")
-            display_cols = ['client_name', 'rating', 'text', 'sentiment', 'churn_risk', 'risk_level', 'ai_summary']
+            display_cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level', 'ai_summary']
             available_cols = [col for col in display_cols if col in df.columns]
             st.dataframe(df[available_cols].tail(10), use_container_width=True)
 
