@@ -30,7 +30,7 @@ for _ in range(100):
         with placeholder.container():
             # === AI OVERALL SUMMARY (TOP BANNER) ===
             latest_summary = df['ai_summary'].iloc[
-                -1] if 'ai_summary' in df.columns and not df.empty else "No summary yet."
+                -5] if 'ai_summary' in df.columns and not df.empty else "No summary yet."
             st.success(f"**AI Business Summary:** {latest_summary}")
 
             st.markdown("---")
