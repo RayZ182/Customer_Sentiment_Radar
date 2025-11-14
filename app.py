@@ -13,7 +13,7 @@ SUMMARY_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=
 
 st.set_page_config(page_title="Client Sentiment Radar", layout="wide")
 st.title("Client Sentiment Radar")
-st.caption("Live AI-Powered Churn Insights | Auto-Refresh: 30s")
+st.caption("Live AI-Powered Churn Insights | Auto-Refresh: 5 Minutes")
 
 placeholder = st.empty()
 
@@ -106,7 +106,7 @@ for _ in range(100):
             )
             st.dataframe(styled, use_container_width=True, key="review_table")
 
-        time.sleep(30)
+        time.sleep(300)
 
     except Exception as e:
         st.error(f"Error: {str(e)[:100]}")
