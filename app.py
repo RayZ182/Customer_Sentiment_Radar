@@ -24,11 +24,11 @@ for _ in range(100):
 
         # === FORCE COLUMN NAMES (EXACT MATCH FROM DEBUG) ===
         expected_cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Confidence',
-                        'Top_Complaint', 'Churn_risk', 'Risk_level', 'Timestamp', 'ai_summary']
+                        'Top_Complaint', 'Churn_risk', 'Risk_level', 'Timestamp', 'ai_summary', 'location']
         df.columns = expected_cols[:len(df.columns)]  # Safety
 
         # Required columns check
-        required = ['Sentiment', 'Churn_risk', 'Feedback', 'Name']
+        required = ['Sentiment', 'Churn_risk', 'Feedback', 'Name', 'location']
         if not all(col in df.columns for col in required):
             raise ValueError("Missing required columns")
 
@@ -98,7 +98,7 @@ for _ in range(100):
 
             # === TABLE ===
             st.subheader("Latest Reviews")
-            cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level']
+            cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level', 'location']
             styled = df[cols].tail(10).style.apply(
                 lambda x: ['background: #ffcccc' if v == 'Negative' else
                            'background: #ccffcc' if v == 'Positive' else ''
