@@ -7,6 +7,7 @@ import time
 SHEET_ID = "19KYixXl-ki1QOYuIRqe_DnWEauhrJyhh4BBTtcA-l0g"
 SHEET_NAME = "Processed"
 GID = "1767595696"  # <-- Get this from URL: gid=1767595696
+GID_SUMMARY = "1697643033"
 
 # Correct CSV export URL (no edit link!)
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
@@ -36,6 +37,14 @@ for _ in range(100):
             st.markdown("---")
 
             col1, col2, col3 = st.columns(3)
+
+            summary_url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_SUMMARY}"
+            summary_df = pd.read_csv(summary_url)
+            latest = summary_df.iloc[-1]
+
+            st.success(f"**Positive:** {latest['positive_summary']}")
+            st.error(f"**Negative:** {latest['negative_summary']}")
+            st.warning(f"**Churn Risk:** {latest['churn_risk_overview']}")
 
             # PIE: Sentiment
             sentiment_counts = df['Sentiment'].value_counts()
