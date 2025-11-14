@@ -5,32 +5,40 @@ import time
 
 # === CONFIG ===
 SHEET_ID = "19KYixXl-ki1QOYuIRqe_DnWEauhrJyhh4BBTtcA-l0g"
-SHEET_NAME = "Processed"
-GID = "1767595696"          # Processed Data tab
+GID = "1767595696"          # Processed / Dashboard Data
 GID_SUMMARY = "1697643033"  # AI_Summary tab
 
-# CSV export URLs
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 SUMMARY_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_SUMMARY}"
 
-# === PAGE CONFIG ===
 st.set_page_config(page_title="Client Sentiment Radar", layout="wide")
 st.title("Client Sentiment Radar")
 st.caption("Live AI-Powered Churn Insights | Auto-Refresh: 30s")
 
-# === AUTO-REFRESH LOOP ===
 placeholder = st.empty()
 
 for _ in range(100):
     try:
-        # Load main feedback data
+        # === LOAD MAIN DATA ===
         df = pd.read_csv(CSV_URL)
+
+        # === FORCE COLUMN NAMES (EXACT MATCH FROM DEBUG) ===
+        expected_cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Confidence',
+                        'Top_Complaint', 'Churn_risk', 'Risk_level', 'Timestamp', 'ai_summary']
+        df.columns = expected_cols[:len(df.columns)]  # Safety
+
+        # Required columns check
+        required = ['Sentiment', 'Churn_risk', 'Feedback', 'Name']
+        if not all(col in df.columns for col in required):
+            raise ValueError("Missing required columns")
+
         df = df.dropna(subset=['Sentiment'])
         df['Churn_risk'] = pd.to_numeric(df['Churn_risk'], errors='coerce').fillna(0)
 
-        # Load AI summary (last 10 feedbacks)
+        # === LOAD AI SUMMARY (Last 10) ===
         try:
             summary_df = pd.read_csv(SUMMARY_URL)
+            summary_df.columns = ['positive_summary', 'negative_summary', 'churn_risk_overview']
             latest_summary = summary_df.iloc[-1]
             has_summary = True
         except:
@@ -38,7 +46,7 @@ for _ in range(100):
             has_summary = False
 
         with placeholder.container():
-            # === AI TRIPLE SUMMARY (Last 10 Feedbacks) ===
+            # === AI TRIPLE SUMMARY ===
             if has_summary:
                 st.success(f"**Positive:** {latest_summary['positive_summary']}")
                 st.error(f"**Negative:** {latest_summary['negative_summary']}")
@@ -48,68 +56,58 @@ for _ in range(100):
 
             st.markdown("---")
 
-            # === LATEST FEEDBACK SUMMARY (Single) ===
-            latest_feedback = df.iloc[-1]
-            st.info(f"**Latest Review:** {latest_feedback['Feedback'][:100]}... | "
-                    f"**Sentiment:** {latest_feedback['Sentiment']} | "
-                    f"**Churn Risk:** {int(latest_feedback['Churn_risk'])}%")
+            # === LATEST REVIEW ===
+            latest = df.iloc[-1]
+            st.info(f"**Latest:** {latest['Feedback'][:100]}... | "
+                    f"**Sentiment:** {latest['Sentiment']} | "
+                    f"**Risk:** {int(latest['Churn_risk'])}%")
 
             st.markdown("---")
 
-            # === 3-COLUMN CHARTS ===
             col1, col2, col3 = st.columns(3)
 
-            # PIE: Sentiment
+            # === PIE CHART ===
             sentiment_counts = df['Sentiment'].value_counts()
             fig_pie = px.pie(
-                values=sentiment_counts.values,
-                names=sentiment_counts.index,
+                values=sentiment_counts.values, names=sentiment_counts.index,
                 color_discrete_map={'Positive': '#10B981', 'Negative': '#EF4444', 'Neutral': '#F59E0B'},
-                title="Sentiment Breakdown",
-                hole=0.4
+                title="Sentiment", hole=0.4
             )
             fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-            col1.plotly_chart(fig_pie, use_container_width=True)
+            col1.plotly_chart(fig_pie, use_container_width=True, key="pie_chart")
 
-            # BAR: Top Complaints
-            complaints = df[df['Sentiment'] == 'Negative']['Top_Complaint'].value_counts().head(5)
-            if not complaints.empty:
-                fig_bar = px.bar(
-                    x=complaints.values, y=complaints.index, orientation='h',
-                    title="Top 5 Complaints",
-                    color=complaints.values, color_continuous_scale='Reds'
-                )
-                fig_bar.update_layout(yaxis={'categoryorder': 'total ascending'})
-                col2.plotly_chart(fig_bar, use_container_width=True)
+            # === BAR CHART ===
+            if 'Top_Complaint' in df.columns:
+                complaints = df[df['Sentiment'] == 'Negative']['Top_Complaint'].value_counts().head(5)
+                if not complaints.empty:
+                    fig_bar = px.bar(x=complaints.values, y=complaints.index, orientation='h',
+                                     title="Top Complaints", color=complaints.values,
+                                     color_continuous_scale='Reds')
+                    col2.plotly_chart(fig_bar, use_container_width=True, key="bar_chart")
+                else:
+                    col2.info("No complaints.", key="no_complaints")
             else:
-                col2.info("No negative feedback yet.")
+                col2.info("No complaint data.", key="no_complaint_col")
 
-            # GAUGE: Avg Churn Risk
+            # === GAUGE ===
             avg_risk = int(df['Churn_risk'].mean())
-            fig_gauge = px.bar(
-                x=[avg_risk], y=[""], orientation='h',
-                title=f"Avg Churn Risk: {avg_risk}%",
-                range_x=[0, 100], color=[avg_risk],
-                color_continuous_scale=[(0, "green"), (0.7, "orange"), (1, "red")]
-            )
-            fig_gauge.update_layout(showlegend=False, xaxis_title=None, yaxis_title=None)
-            col3.plotly_chart(fig_gauge, use_container_width=True)
+            fig_gauge = px.bar(x=[avg_risk], y=[""], orientation='h',
+                               title=f"Avg Risk: {avg_risk}%", range_x=[0, 100],
+                               color=[avg_risk], color_continuous_scale='RdYlGn_r')
+            col3.plotly_chart(fig_gauge, use_container_width=True, key="gauge_chart")
 
-            # === LATEST REVIEWS TABLE ===
+            # === TABLE ===
             st.subheader("Latest Reviews")
-            display_cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level']
-            available_cols = [col for col in display_cols if col in df.columns]
-            st.dataframe(
-                df[available_cols].tail(10).style.apply(
-                    lambda x: ['background: #ffcccc' if v == 'Negative' else
-                               'background: #ccffcc' if v == 'Positive' else ''
-                               for v in x], subset=['Sentiment']
-                ),
-                use_container_width=True
+            cols = ['Name', 'Rating', 'Feedback', 'Sentiment', 'Churn_risk', 'Risk_level']
+            styled = df[cols].tail(10).style.apply(
+                lambda x: ['background: #ffcccc' if v == 'Negative' else
+                           'background: #ccffcc' if v == 'Positive' else ''
+                           for v in x], subset=['Sentiment']
             )
+            st.dataframe(styled, use_container_width=True, key="review_table")
 
         time.sleep(30)
 
     except Exception as e:
-        st.error(f"Connecting to data... ({type(e).__name__})")
+        st.error(f"Error: {str(e)[:100]}")
         time.sleep(5)
